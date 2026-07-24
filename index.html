@@ -8,9 +8,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
 
 <script type="module">
-  import { initializeApp } from "https://vaultchat-3.sdrop6535.workers.dev/vendor/app.js";
-import { ... } from "https://vaultchat-3.sdrop6535.workers.dev/vendor/firestore.js";
-import { ... } from "https://vaultchat-3.sdrop6535.workers.dev/vendor/database.js";
+ import { initializeApp } from "https://vaultchat-3.sdrop6535.workers.dev/vendor/app.js";
+import {
+  getFirestore, collection, doc, setDoc, getDoc, addDoc,
+  onSnapshot, query, orderBy, serverTimestamp, deleteDoc,
+  updateDoc, increment, getDocs, writeBatch
+} from "https://vaultchat-3.sdrop6535.workers.dev/vendor/firestore.js";
+import {
+  getDatabase, ref, onValue, onDisconnect, set, remove, serverTimestamp as rtServerTimestamp
+} from "https://vaultchat-3.sdrop6535.workers.dev/vendor/database.js";
 
   // ── Fetch Firebase config from your Render backend ──────────
   const CONFIG_URL = "https://vaultchat-3.sdrop6535.workers.dev/api/app-config";

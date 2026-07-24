@@ -8,34 +8,40 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import {
-    getFirestore, collection, doc, setDoc, getDoc, addDoc,
-    onSnapshot, query, orderBy, serverTimestamp, deleteDoc,
-    updateDoc, increment, getDocs, writeBatch
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-  import {
-    getDatabase, ref, onValue, onDisconnect, set, remove, serverTimestamp as rtServerTimestamp
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  import { initializeApp } from "https://YOUR-WORKER-DOMAIN/vendor/app.js";
+import { ... } from "https://YOUR-WORKER-DOMAIN/vendor/firestore.js";
+import { ... } from "https://YOUR-WORKER-DOMAIN/vendor/database.js";
 
   // ── Fetch Firebase config from your Render backend ──────────
-  const CONFIG_URL = "https://vc-3-0-backend.onrender.com/api/firebase-config";
+  const CONFIG_URL = "https://YOUR-WORKER-DOMAIN/api/app-config";
 
   let db, rtdb;
 
-  async function initFirebase() {
-    try {
-      const res = await fetch(CONFIG_URL, { credentials: "omit" });
-      if (!res.ok) throw new Error("Failed to fetch config: " + res.status);
-      const firebaseConfig = await res.json();
-      const app = initializeApp(firebaseConfig);
-      db   = getFirestore(app);
-      rtdb = getDatabase(app);
-    } catch (e) {
-      console.error("Firebase init failed:", e);
-      alert("Could not connect to VaultChat services. Please try again later.");
-    }
+let db, rtdb, servicesReady = false;
+
+async function initFirebase() {
+  try {
+    const res = await fetch(CONFIG_URL, { credentials: "omit" });
+    if (!res.ok) throw new Error("Failed to fetch config: " + res.status);
+    const appConfig = await res.json();
+    const app = initializeApp(appConfig);
+    db   = getFirestore(app);
+    rtdb = getDatabase(app);
+    servicesReady = true;
+  } catch (e) {
+    console.error("Service init failed:", e);
+    servicesReady = false;
+    alert("Could not connect to VaultChat services. Please try again later.");
   }
+}
+
+function ensureReady(errEl) {
+  if (!servicesReady || !db || !rtdb) {
+    setErr(errEl, "Still connecting — please wait a moment and retry.");
+    return false;
+  }
+  return true;
+}
 
   window.addEventListener("beforeunload", () => {
     if (presenceRef) { /* onDisconnect already handles RTDB removal */ }
@@ -284,6 +290,7 @@
     const errEl     = document.getElementById("admin-error");
 
     errEl.textContent = "";
+    if (!ensureReady(errEl)) return;
 
     if (!validUsername(username))       return setErr(errEl, "Username must be 1–24 chars (A–Z 0–9 _ . - space).");
     if (!validRoomId(roomId))           return setErr(errEl, "Room ID must be 4–16 chars (A–Z 0–9).");
@@ -327,6 +334,7 @@
     const errEl    = document.getElementById("join-error");
 
     errEl.textContent = "";
+    if (!ensureReady(errEl)) return;
 
     if (!validUsername(username))         return setErr(errEl, "Username must be 1–24 chars (A–Z 0–9 _ . - space).");
     if (!validRoomId(roomId))             return setErr(errEl, "Room ID must be 4–16 chars (A–Z 0–9).");
